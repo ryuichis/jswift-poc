@@ -26,11 +26,22 @@ public class CodeGen {
       gen(stmt)
     }
 
-    let magic: [UInt8] = [0xCA, 0xFE, 0xBA, 0xBE]
+    let j = """
+    .class public Main
+    .super java/lang/Object
 
-    var bytecodeData = Data()
-    bytecodeData.append(contentsOf: magic)
-    try! bytecodeData.write(to: URL(fileURLWithPath: file))
+    .method public static main : ([Ljava/lang/String;)V
+        .limit stack 10
+        .limit locals 10
+
+        getstatic java/lang/System out Ljava/io/PrintStream;
+        ldc "hello world"
+        invokevirtual java/io/PrintStream println (Ljava/lang/Object;)V
+        return
+    .end method
+    """
+
+    try! j.write(toFile: file, atomically: true, encoding: .utf8)
   }
 
   public func gen(_ stmt: Statement) {

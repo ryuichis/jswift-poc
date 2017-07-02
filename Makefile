@@ -13,3 +13,8 @@ test: build
 
 xcodegen:
 	swift package generate-xcodeproj --enable-code-coverage
+
+setup_krakatau:
+	wget https://github.com/Storyyeller/Krakatau/archive/master.zip
+	unzip master.zip
+	mv Krakatau-master Krakatau

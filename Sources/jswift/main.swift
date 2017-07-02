@@ -40,7 +40,7 @@ for sourceFile in sourceFiles {
   }
 
   let codeGen = CodeGen()
-  codeGen.gen(topLevelDecl, to: "Main.class")
+  codeGen.gen(topLevelDecl, to: "Main.j")
 }
 
 exit(0)
