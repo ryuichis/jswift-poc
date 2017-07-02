@@ -19,27 +19,23 @@ import Foundation
 import AST
 
 public class CodeGen {
-  public init() {}
+  var j: String
+
+  public init() {
+    j = ""
+  }
 
   public func gen(_ topLevelDecl: TopLevelDeclaration, to file: String) {
-    for stmt in topLevelDecl.statements {
-      gen(stmt)
-    }
-
-    let j = """
+    j = """
     .class public Main
     .super java/lang/Object
 
-    .method public static main : ([Ljava/lang/String;)V
-        .limit stack 10
-        .limit locals 10
 
-        getstatic java/lang/System out Ljava/io/PrintStream;
-        ldc "hello world"
-        invokevirtual java/io/PrintStream println (Ljava/lang/Object;)V
-        return
-    .end method
     """
+
+    for stmt in topLevelDecl.statements {
+      gen(stmt)
+    }
 
     try! j.write(toFile: file, atomically: true, encoding: .utf8)
   }
@@ -56,8 +52,42 @@ public class CodeGen {
   }
 
   public func gen(_ funcDecl: FunctionDeclaration) {
+    guard funcDecl.name == "main" else { return }
+
+    j += """
+    .method public static main : ([Ljava/lang/String;)V
+      .limit stack 10
+      .limit locals 10
+
+    """
+
+    let stmts = funcDecl.body?.statements ?? []
+    for stmt in stmts {
+      gen(stmt)
+    }
+
+    j += """
+      return
+    .end method
+    """
   }
 
   public func gen(_ funcCallExpr: FunctionCallExpression) {
+    guard funcCallExpr.postfixExpression.textDescription == "print" else { return }
+    guard let firstArg = funcCallExpr.argumentClause?.first,
+      case .expression(let firstExpr) = firstArg,
+      let literalExpr = firstExpr as? LiteralExpression,
+      case .staticString(let str, _) = literalExpr.kind
+    else {
+      return
+    }
+
+    j += """
+
+      getstatic java/lang/System out Ljava/io/PrintStream;
+      ldc "\(str)"
+      invokevirtual java/io/PrintStream println (Ljava/lang/Object;)V
+
+    """
   }
 }
